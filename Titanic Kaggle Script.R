@@ -21,6 +21,11 @@ Last_Name <- function(df) {  Name <- strsplit(df$Name, ",")
 train$Last_Name <- Last_Name(train)
 test$Last_Name <- Last_Name(test)
 
+# first letter of last name
+
+train$Last_Name_Begins_With <- substr(train$Last_Name, 1, 1)
+test$Last_Name_Begins_With <- substr(test$Last_Name, 1, 1)
+
 # combine parents-children and sibling-spouse fields to single family size variable
 
 train$FamSize <- train$Parch + train$SibSp
@@ -53,7 +58,7 @@ test$Cabin_Area <- substr(test$Cabin, 1, 1)
 Cabin.missing.train <- which(train$Cabin_Area=="")
 Cabin.missing.test <- which(test$Cabin_Area=="")
 
-Cabin.Model.data.variables <- c("Age", "Fare", "Pclass")
+Cabin.Model.data.variables <- c("Age", "Fare", "Pclass", "Embarked")
 
 Cabin1 <- cbind.data.frame(train$Cabin_Area[-Cabin.missing.train], train$Age[-Cabin.missing.train], 
                            train$Fare[-Cabin.missing.train], train$Pclass[-Cabin.missing.train])
@@ -80,15 +85,13 @@ test$Cabin_Area[Cabin.missing.test] <- predicted.Cabin.test
 
 Survived <- as.factor(train$Survived)
 
-complete.vars <- c("Age", "FamSize", "Last_Name", "Pclass", "Sex")
-#complete.vars <- c("Age", "Pclass", "Sex", "FamSize")
+
+complete.vars <- c("Age", "FamSize", "Pclass", "Sex")
 model.data <- train[,which(names(train)%in%complete.vars)]
 
 # assign data priors
 
-sampsize <- c(200,100)
-
-rf.model <- rfPermute(Survived ~ ., model.data, ntree=500, sampsize=sampsize, replace=FALSE)
+rf.model <- rfPermute(Survived ~ ., model.data, ntree=1000, cutoff=c(0.47, 0.53), nodesize=25, replace=FALSE)
 rf.model
 
 plotTrace(rf.model)
